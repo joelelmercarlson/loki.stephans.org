@@ -1,0 +1,71 @@
+
+@(#) $Id: TODO,v 1.46 2003/05/11 16:25:42 ast Exp $
+
+o Documentation
+    + Document how the defaults can be change in LokiSa.pm
+
+o Figure out a way to combine all paragraphs after the Email header of
+  a message up to next new message (to keep supporting mbox mode).
+  This way, we can detect HTML "comments" which span paragraphs,
+  i.e. <!foo\n\nbar>
+
+o Experiment/validate stochastic models
+	hidden markov sequence analysis (markov plagiarism detection)
+	http://www.merriampark.com/ld.htm (Levenshtein Distance)
+	(markov, see perl travesty)
+	(soundex, Lingua::EN::Fathom)
+	Nilsimsa Fuzzy Signature algorithm (used by Vipul's Razor)
+	    http://ixazon.dynip.com/~cmeclax/nilsimsa.html
+	    http://search.cpan.org/author/VIPUL/Digest-Nilsimsa-0.06
+	Fuzzysum (for american english)
+	    http://www.csoft.net/~dummy/robert/software/fuzzysum/index.shtml
+	AI::Fuzzy
+	    http://search.cpan.org/author/TSCANLAN/AI-Fuzzy-0.02
+
+o Compare with postini.com and brightmail.com and other OSS spam filters:
+  Vernon Schryver's http://www.rhyolite.com/anti-spam/dcc/
+  Vipus's Razor 
+
+o Investigate what happens when the good corpus is very small (empty),
+  and the spam corpus large; i.e."user independant Bayes DB" - this would
+  be very nice for system-wide spam blocking!
+
+o Port to Win32 and server Exchange Platforms anyone?
+
+o Ditch dbm/ndbm and using Berkeley DB instead (perldoc DB_File)
+  Reopen db's when creating to have at least empty db's there at
+  start, so that current proccmail services doesn't have problem
+  - is the make clean_dbs target which creates empty DBs enough?
+
+o Bump up debug() for NTUPLE voyeurs (debug > 1 shows ntuples)
+
+o Introduce context debugging a la LWP.pm.
+
+o Write CGI for Web service to download sample DBs in XML format.
+  This could be copyright infringemnet because spam is oh so valuable
+  and hence has copyrights.
+
+o Penalize overlong words (and binary words, i.e. asian stuff)
+
+o Add version number reporting somewhere (version number should be
+  indicated in source code somehow).  This will require writing release
+  docs to be followed every time a release is made, so that cvs tags and
+  source (and tarball) will show the same version number.
+
+o Read http://crm114.sourceforge.net/classify_details.txt for inspirations
+
+o Enhance sa-dbm.pl to return value of a given token (pattern?) from all DBs
+  token will be fast, but pattern will be almost as slow as "| grep ...".
+
+o Consider DB updates to be batch processed via a network service.
+  Should small good corpi and very large spam corpi work well, then
+  consider a personalizing the bayes DB based on a very large,
+  globally shared spam DB and small, personal (unshared) good DB.
+
+o Usage counters and timestamps for terms in good and spam. This will
+  allows us to expire terms over time if they lose relevance.
+
+o RRD.pm round-robin-database for terms need to compare it with
+  berkeley DB
+
+o Keep Capitalization - does it matter?

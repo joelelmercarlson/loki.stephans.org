@@ -1,0 +1,313 @@
+http://www.bgl.nu/bogofilter/fisher.html
+
+Bogofilter Calculations: Comparing Geometric Mean with Fisher's Method for Combining Probabilities
+
+Thanks are due, and are hereby tendered, to Tim Peters of _the spambayes project_ for prodding me into adjusting the spam_cutoff values to level out the false-positive counts in the different run conditions; this allowed a much more instructive comparison of false-negative counts.
+
+Introduction and general description:
+
+The original version of bogofilter uses the computation method presented in Paul Graham's paper _A Plan for Spam_.€ Gary Robinson took an interest in Graham's paper, and wrote _an insightful commentary_ in which he presented several untested suggestions for improvements to Graham's method.€ I was intrigued, and modified bogofilter 0.7 (and subsequently 0.7.4 and 0.7.5) to try them out.€ They worked; I ran _a comparison_ that's one of several indicating that implementing Robinson's f(w) and geometric-mean S calculations leads to improved discrimination between spam and nonspam.
+
+More recently, Gary suggested using Fisher's method for combining probabilities to perform the S calculation.€ The idea is theoretically sound: every distinct token in the message contributes, through its f(w) value, an independent estimate of how likely it is that the message is a spam.€ Fisher noted in the early fifties that if one has a number k of independent estimates of probability, and the null hypothesis (that these k values arose by pure chance) is true, then if you sum the natural logarithms of the k estimates and multiply by -2, the result will be distributed as chi-squared with 2k degrees of freedom.€ Accordingly, we can use our message's f(w) values to calculate -2 * sum(ln(f(w))), with twice the number of tokens as the degrees of freedom, and apply an inverse chi-squared function to obtain the probability that the message is spam.€ We can also use the opposite probabilities (1 - f(w)) to calculate a similar probability that the message is nonspam.€ It's been proposed that both be calculated and that S, the "spamicity," should be the difference between the two.€ An advantage of using Fisher's method is that when different messages have different numbers of words, or of characteristic words, the difference in degrees of freedom should so affect the calculations as to make "spamicity" values more comparable from message to message.€ On the other hand, more calculation is needed (computing overhead is greater) in Fisher's method because of the two inverse chi-squared approximations that have to be performed.
+
+I wanted to test whether this approach would produce a further improvment in discrimination, and I also had another question to ask.€ In the original calculation method, only the most characteristic words (those with f(w) values nearest to 0 or 1) are used to calculate S.€ In the geometric-mean S calculation, I had tried a high minimum deviation (looking only at f(w) over 0.9 or under 0.1) and none at all (looking at every token), and the latter seemed to work better.€ I wanted to investigate this systematically.
+
+Procedure and Results:
+
+For this experiment I used a test corpus of 8487 nonspams and 3765 spam emails.€ The nonspams and spams were "dealt" out into three separate mailboxes each; these were fed through bogofilter ten times each, with a different value of minimum deviation each time (0.0 to 0.45 by 0.05 increments).
+
+The nonspam runs with minimum deviation zero produced, on average, 86 false positives from the geometric mean calculation with a spam cutoff of 0.55 (there were many difficult messages among the nonspams, with lots of "spammy" words).€ This was taken as the standard for the remaining runs. For each of these, the nonspam "spamicity" values were sorted in decreasing order and the mean of the 87th values on the three sorted lists was taken as the cutoff for the corresponding spam run. This produced the following cutoff values, where "g" and "f" stand for geometric-mean and Fisher-based calculation respectively:
+
+
+   mindev         g         f
+1    0.00 0.5507887 0.8639143
+2    0.05 0.5608033 0.9263109
+3    0.10 0.5826133 0.9529288
+4    0.15 0.5852377 0.9199869
+5    0.20 0.5897027 0.8601642
+6    0.25 0.5950363 0.8005189
+7    0.30 0.5938437 0.7276493
+8    0.35 0.5895233 0.6632147
+9    0.40 0.5841883 0.6157993
+10   0.45 0.5806370 0.6097056
+
+For each spam run, the wanted datum was the count of false negatives (spam messages with "spamicity" values below the cutoff).€ This was obtained with the geometric-mean calculation, and then the runs were repeated with calculation based on Fisher's method as described above (see _Appendix A_ for details).€ In the following table, the "percent" column gives the percentage of false negatives.
+
+
+
+   calc mindev run fneg percent
+1     g      0   0  151   12.03
+2     g      0   1  160   12.75
+3     g      0   2  161   12.83
+4     g   0.05   0  154   12.27
+5     g   0.05   1  154   12.27
+6     g   0.05   2  159   12.67
+7     g    0.1   0  152   12.11
+8     g    0.1   1  155   12.35
+9     g    0.1   2  163   12.99
+10    g   0.15   0  149   11.87
+11    g   0.15   1  155   12.35
+12    g   0.15   2  163   12.99
+13    g    0.2   0  152   12.11
+14    g    0.2   1  157   12.51
+15    g    0.2   2  163   12.99
+16    g   0.25   0  162   12.91
+17    g   0.25   1  164   13.07
+18    g   0.25   2  174   13.86
+19    g    0.3   0  167   13.31
+20    g    0.3   1  169   13.47
+21    g    0.3   2  184   14.66
+22    g   0.35   0  172   13.71
+23    g   0.35   1  181   14.42
+24    g   0.35   2  189   15.06
+25    g    0.4   0  172   13.71
+26    g    0.4   1  184   14.66
+27    g    0.4   2  207   16.49
+28    g   0.45   0  194   15.46
+29    g   0.45   1  212   16.89
+30    g   0.45   2  220   17.53
+31    f      0   0  168   13.39
+32    f      0   1  167   13.31
+33    f      0   2  160   12.75
+34    f   0.05   0  152   12.11
+35    f   0.05   1  160   12.75
+36    f   0.05   2  152   12.11
+37    f    0.1   0  148   11.79
+38    f    0.1   1  159   12.67
+39    f    0.1   2  157   12.51
+40    f   0.15   0  147   11.71
+41    f   0.15   1  157   12.51
+42    f   0.15   2  162   12.91
+43    f    0.2   0  152   12.11
+44    f    0.2   1  155   12.35
+45    f    0.2   2  163   12.99
+46    f   0.25   0  155   12.35
+47    f   0.25   1  158   12.59
+48    f   0.25   2  174   13.86
+49    f    0.3   0  163   12.99
+50    f    0.3   1  168   13.39
+51    f    0.3   2  183   14.58
+52    f   0.35   0  165   13.15
+53    f   0.35   1  177   14.10
+54    f   0.35   2  189   15.06
+55    f    0.4   0  172   13.71
+56    f    0.4   1  187   14.90
+57    f    0.4   2  204   16.25
+58    f   0.45   0  189   15.06
+59    f   0.45   1  204   16.25
+60    f   0.45   2  216   17.21
+
+€
+
+There is no demonstrable effect of calculation type, though minimum deviation does have a statistically significant impact, on the numbers of false negatives:
+
+
+> gfaov <- aov(pfn ~ calc + mindev + calc * mindev)
+> summary(gfaov)
+            Df Sum Sq Mean Sq F value    Pr(>F)    
+calc         1  0.138   0.138  0.2419    0.6255    
+mindev       9 98.590  10.954 19.1669 6.957e-12 ***
+calc:mindev  9  1.135   0.126  0.2207    0.9897    
+Residuals   40 22.861   0.572                      
+---
+Signif. codes:  0 `***' 0.001 `**' 0.01 `*' 0.05 `.' 0.1 ` ' 1 
+
+€
+
+Summarizing, with means and 95% confidence limits:
+
+
+
+   calc mindev meanfn lcl95 ucl95
+1     g   0.00  12.54 11.66 13.42
+2     g   0.05  12.40 11.52 13.28
+3     g   0.10  12.48 11.60 13.36
+4     g   0.15  12.40 11.52 13.28
+5     g   0.20  12.54 11.66 13.42
+6     g   0.25  13.28 12.40 14.16
+7     g   0.30  13.81 12.93 14.69
+8     g   0.35  14.40 13.52 15.28
+9     g   0.40  14.95 14.07 15.83
+10    g   0.45  16.63 15.75 17.51
+11    f   0.00  13.15 12.27 14.03
+12    f   0.05  12.32 11.44 13.20
+13    f   0.10  12.32 11.44 13.20
+14    f   0.15  12.38 11.50 13.26
+15    f   0.20  12.48 11.60 13.36
+16    f   0.25  12.93 12.05 13.81
+17    f   0.30  13.65 12.77 14.53
+18    f   0.35  14.10 13.22 14.98
+19    f   0.40  14.95 14.07 15.83
+20    f   0.45  16.17 15.29 17.05
+
+Here's a graph of these results.€ Black points show counts of false negatives from the geometric-mean method of calculation, and red points show counts of false negatives from the Fisher-based method.€ They're slightly offset on the x axis so they can be seen more clearly.€ The vertical lines show the 95% confidence limits.
+
+)
+
+Conclusions:
+
+1. The Fisher-based method of calculation seems to offer no clear-cut advantage over the geometric-mean method in terms of discrimination power.€ The two methods yielded essentially identical results in this experiment.€ There are other advantages and disadvantages to be considered, however, as was mentioned at the start of this paper.
+
+2. The use of a minimum deviation in the range 0.05 to 0.2 may improve throughput without degrading discrimination, provided that the spam_cutoff level is adjusted to match.
+
+__Appendix A: Calculation methods:
+
+Both geometric-mean and Fisher-based calculation use
+
+
+scalefactor = badlist_messagecount / goodlist_messagecount
+f(w) = (s * x + badcount) / (s + badcount + goodcount * scalefactor)
+
+The scale factor is the ratio of messages used to make up the list of spam tokens to messages used to make up the list of nonspam tokens.
+
+The f(w) value is calculated for each unique token in the message; the number of such tokens is represented below by n.
+
+In the geometric-mean calculation,
+
+
+P = 1 - exp(sum(ln(1-f(w))) / n)
+Q = 1 - exp(sum(ln(f(w))) / n)
+S = (1 + (P-Q) / (P+Q)) / 2
+
+Fisher's method uses an inverse chi-squared function, prbx, to get the probability associated with -2 times the sum of the logs of f(w) with 2n degrees of freedom:
+
+
+P = prbx(-2 * sum(ln(1-f(w))), 2*n)
+Q = prbx(-2 * sum(ln(f(w))), 2*n)
+S = (1 + Q - P) / 2
+
+Appendix B: Notes on experimental procedure:
+
+The following notes should suffice if anyone wishes to repeat the experiment:
+
+
+
+cd mail
+# 3765 spam in corpus.bad
+# 8487 nonspam in corpus.good
+
+cat ~/bin/thirds
+ #! /bin/sh
+ let n=${FILENO}%3
+ fname=cgx-$n
+ cat >>$fname
+
+FILENO=0 formail -s ~/bin/thirds < corpus.good
+rename gx ns cgx*
+FILENO=0 formail -s ~/bin/thirds < corpus.bad
+rename gx sp cgx*
+
+cd ..
+# /usr/bin/bogofilter is standard Robinson with -m option to set min_dev
+# bin/bogofilter is Robinson-Fisher with -m option to set min_dev
+for run in 0 1 2; do
+ for md in 0.0 0.05 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45; do
+  formail -s /usr/bin/bogofilter -m $md -v < mail/csp-$run &> sp-$md-$run.lm
+  formail -s /usr/bin/bogofilter -m $md -v < mail/cns-$run &> ns-$md-$run.lm
+  formail -s bin/bogofilter -m $md -v < mail/csp-$run &> sp-$md-$run.F 
+  formail -s bin/bogofilter -m $md -v < mail/cns-$run &> ns-$md-$run.F
+ done
+done
+
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*0.lm >ns0lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*1.lm >ns1lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*2.lm >ns2lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*0.lm >sp0lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*1.lm >sp1lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*2.lm >sp2lm.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*0.F >ns0f.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*1.F >ns1f.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t ns*2.F >ns2f.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*0.F >sp0f.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*1.F >sp1f.dat
+pr -l 9999 -F -w 990 -m -n -J -S" " -t sp*2.F >sp2f.dat
+
+The rest of the data reduction is done in R:
+
+read.table("F/ns0f.dat") -> ns0f
+read.table("F/ns0g.dat") -> ns0g
+read.table("F/ns1f.dat") -> ns1f
+read.table("F/ns1g.dat") -> ns1g
+read.table("F/ns2f.dat") -> ns2f
+read.table("F/ns2g.dat") -> ns2g
+read.table("F/sp0f.dat") -> sp0f
+read.table("F/sp0g.dat") -> sp0g
+read.table("F/sp1f.dat") -> sp1f
+read.table("F/sp1g.dat") -> sp1g
+read.table("F/sp2f.dat") -> sp2f
+read.table("F/sp2g.dat") -> sp2g
+scutoff <- 0.55
+fp0 <- sum(ns0g[,1] > scutoff)
+fp1 <- sum(ns1g[,1] > scutoff)
+fp2 <- sum(ns2g[,1] > scutoff)
+fp <- mean(fp0,fp1,fp2)
+ts <- apply(ns0g,2,sort,decreasing=TRUE)
+fp0 <- ts[fp+1,]
+ts <- apply(ns1g,2,sort,decreasing=TRUE)
+fp1 <- ts[fp+1,]
+ts <- apply(ns2g,2,sort,decreasing=TRUE)
+fp2 <- ts[fp+1,]
+fp3 <- t(array(c(fp0,fp1,fp2), dim=c(10,3)))
+gcutoff <- apply(fp3,2,mean)
+n <- 1; fn0g <- c(0,0,0,0,0,0,0,0,0,0)    
+while(n<11) { fn0g[n] <- sum(sp0g[n] <= gcutoff[n]) ; n <- n+1 }
+n <- 1; fn1g <- c(0,0,0,0,0,0,0,0,0,0)
+while(n<11) { fn1g[n] <- sum(sp1g[n] <= gcutoff[n]) ; n <- n+1 }
+n <- 1; fn2g <- c(0,0,0,0,0,0,0,0,0,0)
+while(n<11) { fn2g[n] <- sum(sp2g[n] <= gcutoff[n]) ; n <- n+1 }
+ts <- apply(ns0f,2,sort,decreasing=TRUE)
+fp0 <- ts[fp+1,]
+ts <- apply(ns1f,2,sort,decreasing=TRUE)
+fp1 <- ts[fp+1,]
+ts <- apply(ns2f,2,sort,decreasing=TRUE)
+fp2 <- ts[fp+1,]
+fp3 <- t(array(c(fp0,fp1,fp2), dim=c(10,3)))
+fcutoff <- apply(fp3,2,mean)
+n <- 1; fn0f <- c(0,0,0,0,0,0,0,0,0,0)
+while(n<11) { fn0f[n] <- sum(sp0f[n] <= fcutoff[n]) ; n <- n+1 }
+n <- 1; fn1f <- c(0,0,0,0,0,0,0,0,0,0)
+while(n<11) { fn1f[n] <- sum(sp1f[n] <= fcutoff[n]) ; n <- n+1 }
+n <- 1; fn2f <- c(0,0,0,0,0,0,0,0,0,0)
+while(n<11) { fn2f[n] <- sum(sp2f[n] <= fcutoff[n]) ; n <- n+1 }
+md <- c(0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45)
+cutoff <- data.frame(mindev=md, g=gcutoff, f=fcutoff)
+xmd <- c(t(array(c(md,md,md),dim=c(10,3))))
+n <- rep(c(0,1,2),10)
+calc <- c(rep("g",30),rep("f",30))
+fng <- c(t(array(c(fn0g,fn1g,fn2g),dim=c(10,3))))         
+fnf <- c(t(array(c(fn0f,fn1f,fn2f),dim=c(10,3))))
+gf <- data.frame(calc=calc, mindev=c(xmd,xmd), run=c(n,n),
+  fneg=c(fng,fnf))
+gf$percent <- round(gf$fneg * 100 / length(sp0f[,1]),digits=2)
+write.table(gf,"robfish.tbl")
+attach(gf)
+gf$calc <- factor(gf$calc)
+gf$run <- factor(run)
+gf$mindev <- factor(mindev)
+gfaov <- aov(percent ~ calc + mindev + calc * mindev, data=gf)
+summary(gfaov)
+d <- c(1.95996, 0.412, 0.423)
+rdf <- 40
+rms <- deviance(gfaov) / rdf 
+z <- (d[1] + 1 / (rdf * d[2] - d[3])) * sqrt(rms/3)
+meanfn <- round(apply(array(gf$percent,dim=c(3,20)), 2, mean),
+  digits=2)
+xcalc <- c(rep("g",10), rep("f",10))
+gfres <- data.frame(calc=xcalc, mindev=c(md,md), meanfn=meanfn,
+  lcl95=lcl, ucl95=ucl)
+write.table(gfres,"robfish.result")
+X11(width=5,height=5)
+plot(gfres$mindev[1:10]-0.002, gfres$meanfn[1:10], ylim=c(0,18),
+  main="Geometric Mean vs Fisher Chi-Squared",
+  xlab="Minimum deviation", ylab="Percent error")
+points(gfres$mindev[11:20]+0.002, gfres$meanfn[11:20], col="red")
+lines(gfres$mindev[1:10]-0.002, gfres$ucl[1:10], type="h")
+lines(gfres$mindev[1:10]-0.002, gfres$lcl[1:10],
+  type="h",col="white")
+lines(gfres$mindev[11:20]+0.002, gfres$ucl[11:20], type="h",
+  col="red")
+lines(gfres$mindev[11:20]+0.002, gfres$lcl[11:20], type="h",
+  col="white")
+
+
+[  _Greg Louis_, 2002; last modified 2002-11-18]

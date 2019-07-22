@@ -1,0 +1,24 @@
+void Player::MoveForward(float dt)
+{
+	m_position[0] -= sin(DEG2RAD * m_heading) * dt;
+	m_position[2] += cos(DEG2RAD * m_heading) * dt;
+}
+
+void Player::MoveBackward(float dt)
+{
+	m_position[0] += sin(DEG2RAD * m_heading) * dt;
+	m_position[2] -= cos(DEG2RAD * m_heading) * dt;
+}
+
+void Player::MoveLeft(float dt)
+{
+	m_position[0] -= sin(DEG2RAD * (m_heading + 90)) * dt;
+	m_position[2] += cos(DEG2RAD * (m_heading + 90)) * dt;
+}
+
+void Player::MoveRight(float dt)
+{
+	m_position[0] -= sin(DEG2RAD * (m_heading - 90)) * dt;
+	m_position[2] += cos(DEG2RAD * (m_heading - 90)) * dt;
+}
+

@@ -1,0 +1,61 @@
+# sa-procmail
+#
+# install as $HOME/.procmailrc
+# build database with $HOME/sa-dbm.pl
+#
+# $Id: sa-procmail,v 1.8 2003/01/29 10:20:42 ast Exp $
+#
+LOGFILE="${HOME}/procmail.log"
+SPAMBOX="${HOME}/mail/SPAMBOX"
+LOKISA="${HOME}/.lokisa/bin/sa-filter.pl"
+LOKISAHDR=`${LOKISA} -H`
+#LOKISAWHITE=`$LOKISA -W`
+#LOKISAWHITENOK=`$LOKISA -N`
+#LOGABSTRACT="all"
+#VERBOSE="on"
+
+#
+# Size LINEBUF dynamically to deal with excessively large headers
+LINEBUF="8192"
+:0 H
+* 32000^0
+* 1^1 .
+{
+  LINEBUF="$="
+}
+
+#
+# loki spam filter
+#
+# Based on the probabilities we have built from our corpus of good
+# email and spam, the lokisa will filter it in $SPAMBOX.
+#
+#
+:0 fw
+| $LOKISA
+
+:0 D
+*$ $LOKISAHDR
+{
+	#
+	# Check to see if this sender been whitelisted?
+	:0 D
+	*$ $LOKISAWHITENOK
+	{
+		STATUS="STATUS: Message trapped in $SPAMBOX"
+		
+		:0
+		$SPAMBOX
+	}
+}
+
+# #
+# # check if sender was not white listed
+# :0 D
+# *$ $LOKISAWHITENOK
+# {
+#     :0 Wic
+#     ...
+# }
+
+# EOF

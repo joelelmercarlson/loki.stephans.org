@@ -1,0 +1,442 @@
+# @(#) $Id: ChangeLog,v 1.26 2003/04/04 13:45:21 ast Exp $
+
+# Fri Apr  4 09:52:46 MEST 2003
+LokiSa.pm:
+ + Removed some extraneous constants regarding TOW and max_depth.
+ + Make better use of prob_good, prob_spam, and spamicity, relaxed
+   default threshhold because Fisher numbers habe a different meaning
+   (some use threshhold = 0.55, we now use 0.8262).
+ + Support for skipping neutral expressions
+
+sa-filter.pl:
+ + Added -a option and deprecated -d option.
+
+# Thu Apr  3 09:13:04 MEST 2003
+Fixed dates in copyright.
+Removed extraneous TBD code from LokiSa.pm.
+Finally fixed the "Lokisa-Header Info in DB" Bug 9again).
+
+Coded of ideas in the March 2003 Linux Journal Issue 107 article
+by Gary Robinson "A Statistical Approach to the Spam Problem", see
+also:
+    http://www.bgl.nu/bogofilter/fisher.html
+    http://www.bgl.nu/bogofilter/smindev.html
+    http://wecanstopspam.org/jsp/Wiki?GarySpamArticle
+this stuff I now label Bayes/Fisher in the header, which still has
+some meaningless fields now [the ' (32:3:7;unlimited)'].
+
+Around line 700 in Lokisa.pm we now calculate - using Fisher and
+not combined probability anymore - three probabilities that are:
+    $prob_spam	email is spam
+    $prob_good	email is good
+    $spamicity	difference of above
+we return the most defensive (for now) to mitigate FPs. DBs don't
+need to be remade, but for a complete Fisher calculation we need
+the count of total messages in which every natomtuple has appeared
+(see method email_count). This appears faster to me.
+
+Note depth has now no meaning, also the TOW variables can be thrown
+out, for that rotten logic has been trashed.  We are using more
+generic math without regard to special fiddling and cutoffs which
+is a good thing.
+
+Next step will be to adapt sa-dbm.pl to do make count DBs, in order
+to have the complete Fisher method implemented in Lokisa.
+
+# Thu Mar 20 12:52:01 CST 2003 (LOKISA_3_4_2003_03_20)
+
++ Release the size patch
++ spamgrep.pl little script to take stats from procmail.log
+
+# Tue Feb  4 08:04:46 MET 2003
+
++ Added -M <bytes[K|M]> option to limit amount of filtering per message
+  (good for recipients who get lots of MS-Office attachments).
+
+# Fri Jan 31 16:34:00 CST 2003 (LOKISA_3_3_2003_01_31)
+
++ Release all these little bug fixes that we have done in cvs.
+
+# Wed Jan 29 11:14:38 MET 2003
+
+Added -W and -N options to sa-filter.pl for a procmail pattern to detect
+whitelisting:
+
+Usage: sa-filter.pl [-h] [-v] [-V] [-H|-W|-N] [-D db_dir]
+...
+       -N: print the procmail pattern to catch whitelist (nok) and exit
+       -W: print the procmail pattern to catch whitelist (ok) and exit
+...
+
+i.e. sa-filter.pl -N returns:
+
+    ^X-Lokisa: (nok) .*\<v1.33/1.102\>$
+
+and sa-filter.pl -W returns:
+
+    ^X-Lokisa: (ok) .*\<v1.33/1.102\>$
+
+this can be used in a procmail recipe as follows:
+
+    # recipe which does something on emails coming from non-whitelisted addresses
+    LOKISAWHITENOK=`$LOKISA -N`
+    :0 D
+    *$ $LOKISAWHITENOK
+    {
+	:0 Wic
+	...
+    }
+
+# Wed Dec 16 12:40:00 CST 2002 (LOKISA_3_2_2002_12_11) 
+
++ fixed skip_ownhdr_txt()
++ optimized calculate bayes code
+
+# Mon Dec 06 11:19:00 CST 2002 (LOKISA_3_1_2002_12_06) 
+
++ removed need for monolithic bayes_db
+  All bayes will be calculated at filter time. This really speeds up
+  database handling.
+
+# Mon Nov 18 09:43:22 MET 2002 (CODE_FREEZE_3DOTX)
+
++ Handle MIME content
++ Compensate excess good expressions
++ n-tuples now really begin with non-word-separators
++ Optimized LokiSa::_natomtuples() which is the work horse.
++ Optimized incremental updating for bayes DB, important DBs get large.
++ Ignore irrelevant stuff from mail headers
+ 
+# Fri Nov 15 12:50:33 MET 2002
+
+o Output KB/s throughput of Corpi training and maybe bulk Email
+  filtering
+
+o Optimized LokiSa::_ntuples(): consider creating only ntuples that
+  do not start with a WORDSEPARATOR, i.e. they only end with
+  WORDSEPARATOR(s). Merged with atomizer() in new natomtuples().
+
+# Wed Nov 13 12:46:25 MET 2002
+
+Getting ready for 3.x release
+
+n-tuples were being cumulated wrong: when a new word boundary
+arrived the array was not being shifted to left, i.e. effectively
+we were looking atthe same n-tuple in the beginning of each paragraph.
+Moreover, the new word was prepended instead of postpended.  -v -v
+show that n-tuples in action are correct, because the debug output
+shows a very regular right-to-left pattern.
+
+It is slower, yet better, again, I've re-introduced timing info
+into header Also, tuples are mentioned in header now, we'll be
+skipping headers downward compatible now
+
+We do 3-tuples in mail header, not just 1-tuples, to catch for
+example domainnames better.
+
+# Tue Nov 12 09:00:28 MET 2002
+
+- Default to 0.5 for unknown words (default weight y_weigth)
+- "True Yellow" when in vicinity 0.015 of y_weigth
+- Default threshhold 0.985 instead of .970 for spam
+- Default depth is now 24 instead of 16
+
+- When calculating bayes, ignore words that appear the same # of
+  times in good and spam because this is a true yellow, and stopped
+  using the 2*good bias (rebuild bayes).
+
+These measures should mitigate false positives, at the hopefully
+smaller cost of passing slightly more spam as "Green".
+
+Re-worked tokonizer aka as LokiSa::isatom(): we were not splitting
+up the conetnt on word boundaries enough, i.e. the content 'hot!'
+did not result in the tuple ('hot', 'hot!');
+
+Atomizer integrated into LokiSa::_ntuple() which now returns an
+arrayref instead of an array for performance.  Fixed a terrible bug
+here, isatom() was referring to $_ instead of $arg on these three
+lines:
+
+    return "" if /^[^a-zA-Z0-9]+$/o;          # must contain one alphanumeric
+    return "" if /^[\d:]+$/o;                 # skip numbers & timestamps
+    return "" if /\b=[a-zA-Z][a-zA-Z]\b/o;    # skip mime "letters"
+
+this also solves the so-called "hotlatinas!" bug I referred to in TODO
+previously:
+
+    Study what happens near top if _ntuples closely, in particular
+    in interaction with _prevatoms() where the _prevatoms array is
+    thrown out if the current atom is non grata. For example the
+    expression "hotlatinas!:  shouldn't really show up in spam_db
+    because the atom "!" would reset the prevatoms array, however
+    it did in my db, this may indicate a bug.
+
+Also, skip over some more useless atoms:
+
+    $a =~ /^[-\d:+.e]+$/o	# skip %d, %e, timestamps/zones
+
+but accept tokens of every size (no min length) so that characters
+like "!", "?" which are word breaks come back into the n-tuples.
+
+Finally, skipping MIME characters was not working correctly, andthey
+are important (typicaly =20 at end-of-line, for example), so don't do
+any special handling on these anymore.
+
+Unfortunately, this atomizer is a performance pig, but the atoms and
+words now make much more sense in the good, spam, and bayes DBs!
+
+# Thu Nov  7 09:54:33 MET 2002
+
+Note: Before the following (significant) changes were done, the CVS
+tag 'B4_GOBBLE_NTUPLES' was set.
+
+Generally gobble up paragraphs at a time when parsing input: in
+sa-filter.pl as well as when creating DBs (in Lokisa::_words() and
+Lokisa::_addresses(). This entails making sure patterns are matched
+multi-line, i.e. /.../m. On the other hand, the loop in sa-filter.pl
+has become marvelously simple now.
+
+Instead of splitting on white space /\s+/, split on whitespace and
+word boundaries /[\b\s+]/ to atomize.  This policy is segregated
+into Lokisa::atomize() which may be a performance hog because we
+are now copying paragraphs to weight them.
+
+Generalize pairs to ntuples, this now activates the -n option, by
+default we go to -n 8 (Lokisa::MAX_TUPLES), but for lokisa to work
+on n-tuples higher than 2, spam and good DBs must be rebuilt (so
+they contain up to 8-tuples). This , of course, will also be a
+smaller performance hit. The NTUPLE action can be observed with
+debug >1, i.e. -v -v (for now).
+
+It is interesting to observe the difference between, say:
+
+    make test I=~/.lokisa/spam_example_01 O='-d 3 -n 2 -v -v'
+    make test I=~/.lokisa/spam_example_01 O='-d 9 -n 2 -v -v'
+    make test I=~/.lokisa/spam_example_01 O='-d 9 -n 4 -v -v'
+
+The Makefile now has a clean_dbs target which clobbers the DBs, but
+creates empty ones so that procmail can continue without being
+disturbed.
+
+gimbl aka willers has write permission on CVS repo - hint, hint ;-).
+
+# Tue Oct 29 09:24:38 MET 2002
+devin has write permission on cvs repository now
+
+made sampel = 32 default, because it works much better; also do
+combined probability calculated balanceed, to avoid early underflow,
+don't extend the product past relevant data (i.e. short _bad or
+_good arrays)
+
+verbosity > 3 starts outputting line-by-line stuff, not before
+
+make sure Makefile outputs debugging info
+
+# Fri Oct 25 18:41:08 MEST 2002
+
+No more config file, use -d ,-s, -t options and Makefile
+
+Words pairs (on same line) are now looked at in filter (they were
+already in the db).
+
+With -v, the strings which make up the combined probability can
+be seen, this is especally interesting with -s 32 or -s 64.
+
+Changed sa-procmail to not create a false positive on, say:
+    X-Spamtrap: <mirroredsite@hotmail.com> (NOK) Bayes Green ...
+where the string "red" was seen.
+
+Procmail example doesn't need to be changed because we use $HOME
+These recipes are generic:
+
+    :0 fw
+    | $HOME/.lokisa/bin/sa-filter.pl -a
+    :0 D
+    # catch any " Red " header - even if a " Green " header was forged
+    * ^X-Spamtrap:.* Red .*\<v[0-9\./]+/[0-9\./]+$
+
+or even better:
+
+    :0 fw
+    LOKISA=$HOME/.lokisa/bin/sa-filter.pl
+    LOKISAHDR=`$LOKISA -H`
+    :0 fw
+    | $LOKISA
+    :0 D
+    *$ $LOKISAHDR
+
+(:0 D means to egrep the headers case-sensitively)
+
+Verified that forging a "green" spamtrap header is futile, since
+sa-filter will give it an additional Red header and that will match.
+
+Thu Oct 17 00:38:45 MEST 2002
+
+LokiSa.pm:
+    Better Default Handling 
+    Clean usage of accessor
+    Better Autoload
+    Getting ready to split FIlter/DB code
+Bugfix (by loki):
+    0.01 and 0.99 value logic had a flaw: now we have other values
+    in bayes as ell, when the word exists in both corpi.
+
+sa-filter.pl now can take whole mailboxes:
+    sa-procmail.pl mbox | diff mbox
+or
+    sa-procmail.pl mbox | egrep -i '^(subject|x-spamtrap):'
+is nice for studying statistics
+
+Both perl programs set @INC correctly (also via -D option)
+
+Options galore in sa-filter and sa-dbm, in particlar in sa-filter:
+        set weigth, sample, and threshhold (-w, -s, -t)
+	force calculation for all messages (-a)
+X-Spamtrap: Header notes all the values for reference, also revision
+
+-h print help for both
+-D is directory; Warning: sa-filter -d does not work anymore
+
+$ ./sa-filter.pl -h
+Usage: sa-filter.pl [-D db_dir] [-c configfile]
+       sa-filter.pl [-h] [-v] [-f]
+       sa-filter.pl [-s sample] [-w weigth] [-t threshold]
+       -h: print this help
+       -c config: override default configfile
+       -D db_dir: override default db dir
+       -s sample: number of samples for combined probability (must be even)
+       -w weigth: weight to use when not known (integer between 0% and 100%)
+       -t threshold: cutoff for Red/Green (integer between 0% and 100%)
+       -a output combined probabality for all emails
+       -v: verbose (repeat for more verbosity) - not for procmail!
+       -V: print revision (v1.32/1.32) and exit
+$ ./sa-dbm.pl -h
+Usage: sa-dbm.pl { -[r|s] [<type>] | -B [<type>] | -N [<type>] }
+       sa-dbm.pl [-h] [-v] [-D db_dir] -[a|d] email_address [, ...]
+       -h: print this help
+       -c config: override default configfile
+       -D db_dir: override default db dir
+       -B: build databases
+       -N: nuke databases
+           <type> is [bad|good|white|bayes], default is all
+       -v: verbose (repeat for more verbosity)
+       -r: show databases sorted alphabetically
+       -s: show databases sorted reverse numerically
+       -a: add the given addresses out of the whitelist db
+       -d: deletes the given addresses out of the whitelist db
+       -V: print revision (v1.32/1.32) and exit
+
+
+Done:
+    o One header for X-Spamfilter: <address> (OK|NOK) (GREEN|RED) 0.00e-1
+Fixed:
+    o ./sa-dbm.pl -B bad
+	fails with
+	Invalid variable or method 'ngood' at /home/ast/.lokisa/LokiSa.pm line 261.
+	because ngood gets defined when good is opened
+
+Wed Oct 16 00:40:14 MEST 2002 
+
++ added word pairs into bad and good dbs as input is scanned
+  redefining LokiSa::_accumulate_pairs() { return $_[2] } would
+  undo this feature, but it seems to work well.
++ option -s on sa-dbm.pl now sorts numerically, option -d deletes
+  one r more whitelist addresses
++ cleaned up criteria when and how bayes is calculated; paul graham
+  was a bit confusing here, we calculate when the word is in both
+  bad and good db.
++ added BSD licenses to the sa-dbm.pl, sa-filter.pl, and LokiSa.pm
+
+Mon Oct 15 10:49:00 CST  2002 by Joel E. Carlson <loki@dealund.com>
+
++ Modified Makefile to work with .lokisa
++ Modified sa-procmail to work with .lokisa
++ Changed LokiSa.pm to build bayes_db based on message count not word-count.
+
+Sun Oct 13 17:40:30 MEST 2002 by Adrian Steinmann <ast@marabu.ch>
+
+Starting with LOKI_SA_1_1, we made it into a perl class by putting
+all common routines into LokiSA.pm. This deleted a lot of duplicate
+code for parsing config files, etc.
+
+Essentially, there are now only two programs:
+
+sa-filter.pl
+    Usage: sa-filter.pl [ -c configfile | -d db_directory ]
+	expects a config file in ~/.lokisa/config or passed as the
+	argument to the -c option
+    
+	when the argument to the -d option is a directory, the config
+	file parsing is skipped all togethor, and the requisite databases
+	are expected in that directory (i.e. procmail doesn't have to
+	parse config files if we pass the program the correct directory)
+
+sa-dbm.pl
+    Usage: sa-dbm.pl [-r [<type>] ] [-B [<type>]] [-N [<type>]]
+	    -N: nuke databases
+	    -B: build databases
+	    -r: read databases
+	    <type> is [bad|good|white|bayes], default is all
+
+This program nukes or rebuilds one or all databases (note we merge
+new data with old, nuke has to be requested explicitely). The Bayes
+DB is rebuilt wen necessary.
+
+The white list is now correctly accumulated (loki-sa-1.1 kept
+additional text before and after the addresses): all lowercase
+...@... addresses without <> (see LokiSa::filter_address).
+
+This means that massaged white list input needs to have leading "From "
+words, this was different in 1.1: sed -e 's/^/From /' is your friend.
+
+
+The LokiSa::filter_token routine which picks out the words which
+are relevant for statistical analysis has been tuned to ignore words
+shorter than 4 letters, timestamps, and strings containing only
+non-alphanumeric characters.
+
+The default headers have been changed from
+    X-LOKI-Color:
+    X-LOKI-Score:
+    X-LOKI-Whitelist:
+to
+    X-Spamtrap-Color:
+    X-Spamtrap-Score:
+    X-Spamtrap-Whitelist:
+and if an Email is detected to be from a whitelisted address, the
+Bayes rating is skipped, i.e., no X-Spamtrap-Color/X-Spamtrap-Score
+headers are appended. GREEN and RED are now spelt Green and Red.
+These changes will affect the procmail definition.
+
+These defaults can be changed in LokiSA::new
+
+	SAMPLE		=> 16,
+	WEIGTH		=> 0.4,
+	THRESHOLD	=> 0.97,
+	DB_DIR		=> "$ENV{HOME}/.lokisa",
+	CONFIG		=> "config",
+	CONFIGFILE	=> "",
+	HDR_SCORE	=> 'X-Spamtrap-Score',
+	HDR_COLOR	=> 'X-Spamtrap-Color',
+	HDR_WHITE	=> 'X-Spamtrap-Whitelist',
+	OK		=> '(OK)',
+	NOK		=> '(NOK)',
+	GREEN		=> 'Green',
+	RED		=> 'Red',
+
+when creating a new LokiSA object:
+
+    my $sa = new LokiSa (
+	HDR_SCORE	=> 'X-Score:',
+	HDR_COLOR	=> 'X-YesOrNo:',
+	HDR_WHITE	=> 'X-LOKI-Whitelist',
+	GREEN		=> 'Yes',
+	RED		=> 'No',
+    );
+
+if CONFIGFILE is empty, it is expected to be $ENV{HOME}/.lokisa/config,
+i.e. $sa->DB_DIR . '/' . $sa->CONFIG.
+
+These defaults values are used whenever the corresponding lower-case
+variables are undefined (this is done via LokiSA::AUTOLOADER).
+

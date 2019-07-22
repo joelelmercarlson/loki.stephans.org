@@ -1,0 +1,49 @@
+# @(#) $Id: README,v 1.10 2002/11/29 15:20:07 ast Exp $
+
+LokiSa is "Loki's Spam Annihilator" or in italian, "Loki Knows"
+
+Who's Loki? See: http://loki.ragnarokr.com/cult/wholoki.html
+
+Installation
+------------
+
+make install
+
+'make install' will result in:
+    Creating /home/ast/.lokisa/ for the databases good, spam, and white
+    Installing sa-dbm.pl, sa-filter.pl, and LokiSa.pm into /home/ast/.lokisa
+    Create sa-procmail to be copied to /home/ast/.procmailrc
+
+'make dbs' will create good, spam, and white DBs from
+    S=/home/ast/.lokisa/mail/spam
+    G=/home/ast/.lokisa/mail/good
+    W=/home/ast/.lokisa/mail/white
+
+Additional targets:
+  To update the DBs:
+    good_db, spam_db, white_db
+  To read:
+    read_good, read_spam, read_white, read_bayes
+
+This is the general Modus Operandi
+    
+    (1)
+	clean inbox
+	incremental update good DB from inbox
+	    make good_db G=inbox
+	incremental update white DB from inbox
+	    make white_db W=inbox
+    
+    (2)
+	check spambox for false positives
+	incremental update spam DB from spambox
+	    make spam_db B=spambox
+    
+	delete spambox
+
+Steps (1) and (2) can be done independantly
+
+To help with development feel free to look at our work in progress
+see the cvsweb URL
+
+    http://webgroup.ch/perl-bin/cvsweb.cgi/lokisa/

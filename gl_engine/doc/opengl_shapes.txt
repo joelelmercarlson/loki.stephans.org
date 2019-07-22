@@ -1,0 +1,59 @@
+// 3D Pyramid
+glBegin(GL_TRIANGLES);
+	//top
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(-1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(1.0f,-1.0f,1.0f);
+	//right
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(1.0f,-1.0f,-1.0f);
+	//back
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(-1.0f,-1.0f,-1.0f);
+	//left
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(-1.0f,-1.0f,1.0f);
+glEnd();
+
+// 3D cube
+glBegin(GL_QUADS);
+	// front
+	glNormal3f(0.0f,0.0f,1.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(-1.0f,-1.0f, 1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f( 1.0f,-1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(-1.0f, 1.0f, 1.0f);
+	// back
+	glNormal3f(0.0f,0.0f,-1.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(-1.0f, 1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f, 1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f,-1.0f,-1.0f);
+	// top
+	glNormal3f(0.0f,1.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(-1.0f, 1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(-1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f, 1.0f,-1.0f);
+	// bottom
+	glNormal3f(0.0f,-1.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f( 1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f,-1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(-1.0f,-1.0f, 1.0f);
+	// right
+	glNormal3f(1.0f,0.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f( 1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f( 1.0f, 1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f( 1.0f,-1.0f, 1.0f);
+	// left
+	glNormal3f(-1.0f,0.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f);glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);glVertex3f(-1.0f,-1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,1.0f);glVertex3f(-1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f,0.0f,0.0f);glVertex3f(-1.0f, 1.0f,-1.0f);
+glEnd();

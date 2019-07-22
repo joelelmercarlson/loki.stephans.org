@@ -1,0 +1,41 @@
+Help
+----
+arrows  = forward, backward, rotate heading
+<mouse> = change heading, change pitch
+<wheel-mouse> = change zoom (0)
+a = strafe left
+s = strafe right
+d = debug camera
+f = locked-y first-person
+m = capture mouse
+-/+ = mouse sensitivity (0.15)
+q = quit
+
+src
+---
+App.cpp        -- Run the game
+Background.cpp -- Skybox to contain the gameworld
+Boss.cpp       -- The boss characters
+Camera.cpp     -- Camera class first person view
+Engine.cpp     -- Setup SDL and start Main and App
+Explosion.cpp  -- Handle explosions
+Explosion2.cpp -- snowflake style explosions
+Frustum.cpp    -- Viewing volume used by Player.cpp
+glu.cpp        -- routines lifted from libglu
+HUD.cpp        -- Heads Up Display
+Input.cpp      -- Simple input class used to pass state from Main to App
+Main.cpp       -- Handle input and App
+Matrix.cpp     -- C matrix routines
+Object.cpp     -- Visual Game Objects
+Particle.cpp   -- Particle System for Explosions
+Quaternion.cpp -- Quaternion representation of rotations
+Rocket.cpp     -- shooting rocket
+Rocket2.cpp    -- shooting rocket with gravity
+Scenery.cpp    -- Immoveable objects
+SDL_LoadImage.cpp -- convert SDL textures to opengl
+Terrain.cpp    -- Fast terrain map [good for games]
+Vector.cpp     -- Vector class
+
+Require gcc-c++, and SDL-devel
+
+Joel E Carlson <joel.elmer.carlson@gmail.com>

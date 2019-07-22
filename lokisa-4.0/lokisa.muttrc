@@ -1,0 +1,31 @@
+#
+# sample .muttrc bindings to integrate Lokisa
+#
+# $Id: lokisa.muttrc,v 1.10 2003/04/21 15:45:52 loki Exp $
+
+#
+# Lokisa keybindings
+# esc-i to add message to good database
+# esc-o to add message to spam database
+# esc-p to see how the email scored
+# esc-w to whitelist address
+#
+# Note: Need .lokisa/bin in $PATH
+macro index "\ei" "|sa-dbm.pl -g -"
+macro pager "\ei" "|sa-dbm.pl -g -"
+macro index "\eo" "|sa-dbm.pl -s -"
+macro pager "\eo" "|sa-dbm.pl -s -"
+macro index "\ep" "|sa-filter.pl -v -v -v - 2>&1|$PAGER\n"
+macro pager "\ep" "|sa-filter.pl -v -v -v - 2>&1|$PAGER\n"
+macro index "\ew" "|awk '/X-Lokisa:.*(nok)/{ print $2 }'|xargs sa-dbm.pl -v -a"
+
+#
+# note add \n to end of each line if you do not want to be prompted.
+
+#
+# Lokisa color based on Lokisa header
+color header brightred    black "^X-Lokisa:.*(Red)"
+color header brightyellow black "^X-Lokisa:.*(Yellow)"
+color header brightgreen  black "^X-Lokisa:.*(Green)"
+
+# end of Lokisa mutt bindings
