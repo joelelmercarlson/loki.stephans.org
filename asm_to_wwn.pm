@@ -4,7 +4,7 @@
 #
 # __LICENSE__
 #
-# Copyright (c) 2007-2012; All rights reserved.
+# Copyright (c) 2007-2021; All rights reserved.
 # by  Joel E. Carlson      <joel.elmer.carlson@gmail.com>
 #
 # Redistribution and use in source and binary forms, with or without
